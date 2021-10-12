@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DoNotModify;
 
-namespace ExampleTeam {
+namespace TeamCerber {
 
 	public class ExampleController : BaseSpaceShipController
 	{
