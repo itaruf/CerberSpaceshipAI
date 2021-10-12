@@ -5,11 +5,11 @@ using DoNotModify;
 
 namespace BehaviorDesigner.Runtime.Tasks.Unity.UnityCharacterController
 {
-    public class Shoot : Action
+    public class FireShockwave : Action
     {
         public SharedFloat _energy = 1.0f;
-        public SharedFloat _shootEnergyCost = 0.2f;
-        [SerializeField] private Bullet bulletPrefab;
+        public SharedFloat _shockwaveEnergyCost = 0.2f;
+        [SerializeField] private Shockwave shockwavePrefab;
         public SharedInt _owner;
         public SharedVector2 _position;
         public SharedFloat _orientation;
@@ -24,14 +24,15 @@ namespace BehaviorDesigner.Runtime.Tasks.Unity.UnityCharacterController
 
         public override TaskStatus OnUpdate()
         {
-            if (_energy.Value < _shootEnergyCost.Value)
+            if (_energy.Value < _shockwaveEnergyCost.Value)
                 return TaskStatus.Failure;
 
             Quaternion rotation = Quaternion.Euler(0, 0, _orientation.Value);
-            Bullet spawned = GameObject.Instantiate<Bullet>(bulletPrefab, _position.Value, rotation) ;
+            Shockwave spawned = GameObject.Instantiate<Shockwave>(shockwavePrefab, _position.Value, rotation);
 
             spawned.SetOwner(_owner.Value);
-            _energy.Value -= _shootEnergyCost.Value;
+            _energy.Value -= _shockwaveEnergyCost.Value;
+            
 
             // Currently, the HUD script is changing the value of the sliders too : Find how to change sliders value in HUD or energy Value in SpaceShip
             //if (_owner.Value == 0)
@@ -49,4 +50,6 @@ namespace BehaviorDesigner.Runtime.Tasks.Unity.UnityCharacterController
     }
 
 }
+
+
 

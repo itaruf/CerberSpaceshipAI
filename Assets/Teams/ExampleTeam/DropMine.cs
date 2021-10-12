@@ -5,14 +5,12 @@ using DoNotModify;
 
 namespace BehaviorDesigner.Runtime.Tasks.Unity.UnityCharacterController
 {
-    public class Shoot : Action
+    public class DropMine : Action
     {
         public SharedFloat _energy = 1.0f;
-        public SharedFloat _shootEnergyCost = 0.2f;
-        [SerializeField] private Bullet bulletPrefab;
-        public SharedInt _owner;
+        public SharedFloat _mineEnergyCost = 0.2f;
+        [SerializeField] private GameObject minePrefab;
         public SharedVector2 _position;
-        public SharedFloat _orientation;
         public SharedGameObject _hud;
         private Hud hud;
 
@@ -24,14 +22,11 @@ namespace BehaviorDesigner.Runtime.Tasks.Unity.UnityCharacterController
 
         public override TaskStatus OnUpdate()
         {
-            if (_energy.Value < _shootEnergyCost.Value)
+            if (_energy.Value < _mineEnergyCost.Value)
                 return TaskStatus.Failure;
 
-            Quaternion rotation = Quaternion.Euler(0, 0, _orientation.Value);
-            Bullet spawned = GameObject.Instantiate<Bullet>(bulletPrefab, _position.Value, rotation) ;
-
-            spawned.SetOwner(_owner.Value);
-            _energy.Value -= _shootEnergyCost.Value;
+            GameObject.Instantiate(minePrefab, _position.Value, Quaternion.identity);
+            _energy.Value -= _mineEnergyCost.Value;
 
             // Currently, the HUD script is changing the value of the sliders too : Find how to change sliders value in HUD or energy Value in SpaceShip
             //if (_owner.Value == 0)
@@ -49,4 +44,5 @@ namespace BehaviorDesigner.Runtime.Tasks.Unity.UnityCharacterController
     }
 
 }
+
 
