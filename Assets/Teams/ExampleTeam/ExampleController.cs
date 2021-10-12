@@ -8,16 +8,19 @@ namespace TeamCerber {
 
 	public class ExampleController : BaseSpaceShipController
 	{
-
+		private BehaviorTree behaviorTree;
 		public override void Initialize(SpaceShipView spaceship, GameData data)
 		{
-			BehaviorTree behaviorTree = GetComponent<BehaviorTree>();
-			behaviorTree.SetVariableValue("Position", spaceship.Position);
-			behaviorTree.SetVariableValue("Orientation", spaceship.Orientation);
+			behaviorTree = GetComponent<BehaviorTree>();
+			Hud hud = FindObjectOfType<Hud>();
+			behaviorTree.SetVariableValue("Hud", hud.gameObject);
 		}
 
 		public override InputData UpdateInput(SpaceShipView spaceship, GameData data)
 		{
+			behaviorTree.SetVariableValue("Position", spaceship.Position);
+			behaviorTree.SetVariableValue("Orientation", spaceship.Orientation);
+
 			SpaceShipView otherSpaceship = data.GetSpaceShipForOwner(1 - spaceship.Owner);
 			float thrust = 1.0f;
 			float targetOrient = spaceship.Orientation + 90.0f;
