@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using DoNotModify;
+using BehaviorDesigner.Runtime;
 
 namespace TeamCerber {
 
@@ -10,6 +11,9 @@ namespace TeamCerber {
 
 		public override void Initialize(SpaceShipView spaceship, GameData data)
 		{
+			BehaviorTree behaviorTree = GetComponent<BehaviorTree>();
+			behaviorTree.SetVariableValue("Position", spaceship.Position);
+			behaviorTree.SetVariableValue("Orientation", spaceship.Orientation);
 		}
 
 		public override InputData UpdateInput(SpaceShipView spaceship, GameData data)
