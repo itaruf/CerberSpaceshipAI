@@ -4,44 +4,47 @@ using UnityEngine;
 using DoNotModify;
 using BehaviorDesigner.Runtime;
 
-namespace TeamCerber {
+namespace TeamCerber
+{
 
-	public class CerberController : BaseSpaceShipController
-	{
-		private BehaviorTree behaviorTree;
+    public class CerberController : BaseSpaceShipController
+    {
+        private BehaviorTree behaviorTree;
 
-		private bool needShoot;
-		private bool needMine;
-		private bool needShockwave;
+        private bool needShoot;
+        private bool needMine;
+        private bool needShockwave;
 
-		public override void Initialize(SpaceShipView spaceship, GameData data)
-		{
-			behaviorTree = GetComponent<BehaviorTree>();
+        public override void Initialize(SpaceShipView spaceship, GameData data)
+        {
+            behaviorTree = GetComponent<BehaviorTree>();
 
-			behaviorTree.SetVariableValue("Spaceship", GameManager.Instance.GetSpaceShipForController(this).gameObject);
-		}
+            behaviorTree.SetVariableValue("Spaceship", GameManager.Instance.GetSpaceShipForController(this).gameObject);
+        }
 
-		public override InputData UpdateInput(SpaceShipView spaceship, GameData data)
-		{
+        public override InputData UpdateInput(SpaceShipView spaceship, GameData data)
+        {
             needShoot = (bool)behaviorTree.GetVariable("Need Shoot").GetValue();
-			needMine = (bool)behaviorTree.GetVariable("Need Mine").GetValue();
-			needShockwave = (bool)behaviorTree.GetVariable("Need Shockwave").GetValue();
+            needMine = (bool)behaviorTree.GetVariable("Need Mine").GetValue();
+            needShockwave = (bool)behaviorTree.GetVariable("Need Shockwave").GetValue();
 
-			SpaceShipView otherSpaceship = data.GetSpaceShipForOwner(1 - spaceship.Owner);
-			float thrust = 1.0f;
-			float targetOrient = spaceship.Orientation + 90.0f;
+            SpaceShipView otherSpaceship = data.GetSpaceShipForOwner(1 - spaceship.Owner);
+            float thrust = 1.0f;
+            //float targetOrient = spaceship.Orientation + 90.0f;
+            float targetOrient = -Mathf.Atan2(otherSpaceship.Position.x - spaceship.Position.x, otherSpaceship.Position.y - spaceship.Position.y) * Mathf.Rad2Deg + 90;
 
-			bool canHit = AimingHelpers.CanHit(spaceship, otherSpaceship.Position, otherSpaceship.Velocity, 0.15f);
 
-			if (needShoot && canHit)
-				behaviorTree.SetVariableValue("Need Shoot", false);
+            bool canHit = AimingHelpers.CanHit(spaceship, otherSpaceship.Position, otherSpaceship.Velocity, 0.15f);
 
-			behaviorTree.SetVariableValue("Need Mine", false);
-			behaviorTree.SetVariableValue("Need Shockwave", false);
+            if (needShoot && canHit)
+                behaviorTree.SetVariableValue("Need Shoot", false);
 
-			return new InputData(thrust, targetOrient, needShoot && canHit, needMine, needShockwave);
+            behaviorTree.SetVariableValue("Need Mine", false);
+            behaviorTree.SetVariableValue("Need Shockwave", false);
 
-		}
-	}
+            return new InputData(thrust, targetOrient, needShoot && canHit, needMine, needShockwave);
+
+        }
+    }
 
 }
