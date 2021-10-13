@@ -41,18 +41,30 @@ namespace TeamCerber
 
             //float targetOrient = spaceship.Orientation + 90.0f;
 
-            foreach (WayPointView WPChild in data.WayPoints)
-            {
-                if (Vector2.Distance(closestWpPosition, spaceship.Position) > Vector2.Distance(WPChild.Position, spaceship.Position) && WPChild.Owner != spaceship.Owner)
-                {
-                    closestWpPosition = WPChild.Position;
-                }
-            }
-
+            
             if (followPlayer)
                 targetOrient = -Mathf.Atan2(otherSpaceship.Position.x - spaceship.Position.x, otherSpaceship.Position.y - spaceship.Position.y) * Mathf.Rad2Deg + 90;
             else if (moveToWp)
-                targetOrient = -Mathf.Atan2(closestWpPosition.y - spaceship.Position.x, closestWpPosition.y - spaceship.Position.y) * Mathf.Rad2Deg + 90;
+            {
+                float nearestWp = float.MaxValue;
+
+                foreach (WayPointView WPChild in data.WayPoints)
+                {
+                    float distance = Vector2.Distance(WPChild.Position, spaceship.Position);
+                    if (nearestWp > distance && WPChild.Owner != spaceship.Owner)
+                    {
+                        nearestWp = distance;
+                        closestWpPosition = WPChild.Position;
+                        Debug.Log(closestWpPosition);
+                    }
+                }
+
+                float angle = Vector2.SignedAngle(spaceship.Velocity, closestWpPosition - spaceship.Position);
+                angle = angle * 1.5f;
+                float angle2 = Vector2.SignedAngle(Vector2.right, spaceship.Velocity) + angle;
+
+                targetOrient = Vector2.SignedAngle(Vector2.right, spaceship.Velocity) + angle;
+            }
             else if (!followPlayer && !moveToWp)
                 targetOrient = spaceship.Orientation;
 
