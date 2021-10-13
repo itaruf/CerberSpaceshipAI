@@ -27,20 +27,17 @@ namespace TeamCerber {
 			needMine = (bool)behaviorTree.GetVariable("Need Mine").GetValue();
 			needShockwave = (bool)behaviorTree.GetVariable("Need Shockwave").GetValue();
 
-			behaviorTree.SetVariableValue("Need Shoot", false);
-			behaviorTree.SetVariableValue("Need Mine", false);
-			behaviorTree.SetVariableValue("Need Shockwave", false);
-
 			SpaceShipView otherSpaceship = data.GetSpaceShipForOwner(1 - spaceship.Owner);
 			float thrust = 1.0f;
 			float targetOrient = spaceship.Orientation + 90.0f;
 
 			bool canHit = AimingHelpers.CanHit(spaceship, otherSpaceship.Position, otherSpaceship.Velocity, 0.15f);
 
-			//if(!canHit)
-			//	return new InputData(thrust, targetOrient, !canHit, needMine, needShockwave);
-			//else
-			//	return new InputData(thrust, targetOrient, needShoot, needMine, needShockwave);
+			if (needShoot && canHit)
+				behaviorTree.SetVariableValue("Need Shoot", false);
+
+			behaviorTree.SetVariableValue("Need Mine", false);
+			behaviorTree.SetVariableValue("Need Shockwave", false);
 
 			return new InputData(thrust, targetOrient, needShoot && canHit, needMine, needShockwave);
 
