@@ -10,16 +10,19 @@ namespace BehaviorDesigner.Runtime.Tasks.Unity.UnityCharacterController
         public SharedGameObject _spaceShip;
         private SpaceShip spaceShip;
 
+        public SharedBool needShoot;
+
         public override void OnAwake()
         {
-            spaceShip = _spaceShip.Value.gameObject.GetComponent<SpaceShip>();
+            //spaceShip = _spaceShip.Value.gameObject.GetComponent<SpaceShip>();
 
             base.OnAwake();
         }
 
         public override TaskStatus OnUpdate()
         {
-            spaceShip.Shoot();
+            //spaceShip.Shoot();
+            needShoot.Value = true;
 
             return base.OnUpdate();
         }
