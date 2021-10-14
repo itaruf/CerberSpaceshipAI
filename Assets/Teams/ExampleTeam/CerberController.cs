@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DoNotModify;
@@ -18,9 +19,11 @@ namespace TeamCerber
         private bool moveToWp;
 
         private Vector2 closestWpPosition;
+        private WayPointView closestWpView;
+        private float lastMineShot = -3.5f;
 
-        private float mineSecurityDistance = .5f;
-        private float asteroidSecurityDistance = 1.5f;
+        private float mineSecurityDistance = .8f;
+        private float asteroidSecurityDistance = 1.2f;
         private float shockwaveDistance = 1.5f;
 
         private bool needAvoid;
@@ -58,13 +61,26 @@ namespace TeamCerber
             CheckHitEnemy(spaceship, otherSpaceship, canHitEnemy, hit, hit2);
 
             CheckHitMine(spaceship, data, out var canHitMine);
+            CheckDropMine(spaceship);
+
+            //behaviorTree.SetVariableValue("Need Mine", false);
+            behaviorTree.SetVariableValue("Need Shockwave", false);
 
             MoveToWp(spaceship, data, hit2);
 
-            behaviorTree.SetVariableValue("Need Mine", false);
-            behaviorTree.SetVariableValue("Need Shockwave", false);
-
             return new InputData(thrust, targetOrient, (needShoot && canHitEnemy) || canHitMine, needMine, needShockwave);
+        }
+
+        private void CheckDropMine(SpaceShipView spaceship)
+        {
+            needMine = Vector2.Distance(closestWpPosition, spaceship.Position) < 0.7f &&
+                             closestWpView.Owner == spaceship.Owner && Time.time - lastMineShot > 3.5f;
+
+            if (needMine)
+            {
+                lastMineShot = Time.time;
+            }
+            behaviorTree.SetVariableValue("Need Mine", needMine);
         }
 
         private void CheckHitMine(SpaceShipView spaceship, GameData data, out bool canHitMine)
@@ -116,7 +132,6 @@ namespace TeamCerber
         void MoveToWp(SpaceShipView spaceship, GameData data, RaycastHit2D hitVelocity)
         {
             Debug.DrawRay(spaceship.Position, (Quaternion.Euler(0, 0, targetOrient) * Vector3.right).normalized * asteroidSecurityDistance, Color.red);
-            Debug.Log(targetOrient);
             float nearestWp = float.MaxValue;
 
             foreach (WayPointView WPChild in data.WayPoints)
@@ -127,33 +142,33 @@ namespace TeamCerber
                 {
                     nearestWp = distance;
                     closestWpPosition = WPChild.Position;
+                    closestWpView = WPChild;
 
                     moveToWp = false;
                 }
             }
 
             if (needAvoid) needAvoid = false;
+            //float closestAstDist = Single.PositiveInfinity;
             foreach (AsteroidView ast in data.Asteroids)
             {
-                if (Vector2.Distance(spaceship.Position, ast.Position) <
-                    ast.Radius + spaceship.Radius + asteroidSecurityDistance)
+                float dist = Vector2.Distance(spaceship.Position, ast.Position);
+                bool isInShipRange = dist < ast.Radius + spaceship.Radius + asteroidSecurityDistance;
+                bool willHit = hitVelocity.collider != null && hitVelocity.collider.CompareTag("Asteroid");
+                if (isInShipRange && willHit) 
                 {
                     needAvoid = true;
                     avoidedAstPos = ast.Position;
+                    //closestAstDist = dist;
+                    Debug.DrawLine(spaceship.Position, avoidedAstPos, Color.blue);
                 }
             }
-            if (!needAvoid) isAvoiding = false;
 
-            if (needAvoid && !isAvoiding)
-            {
-                Debug.Log("vesqui");
-                isAvoiding = true;
-            }
-            if (!isAvoiding)
+            if (!needAvoid)
             {
                 float angle = Vector2.SignedAngle(spaceship.Velocity, closestWpPosition - spaceship.Position);
                 angle = angle * 1.5f;
-                angle = Mathf.Clamp(angle, -170, 170);
+                angle = Mathf.Clamp(angle, -175, 175);
 
                 targetOrient = Vector2.SignedAngle(Vector2.right, spaceship.Velocity) + angle;
             }

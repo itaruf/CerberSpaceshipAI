@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BehaviorDesigner.Runtime.Tasks;
 using UnityEngine;
 
 namespace DoNotModify
@@ -324,6 +325,10 @@ namespace DoNotModify
         private void OnCollisionEnter2D(Collision2D collision)
         {
 			shockAudio?.Play();
+            if (collision.collider.CompareTag("Asteroid"))
+            {
+                Debug.Log("astéroides touchés");
+            }
 		}
 
         public Color GetColor()

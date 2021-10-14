@@ -61,6 +61,7 @@ namespace DoNotModify
 		{
 			if (collision.tag == "Player")
 			{
+				Debug.Log("waypoint touchés");
 				SpaceShip spaceShip = collision.attachedRigidbody.GetComponent<SpaceShip>();
 				if (spaceShip.Owner != _owner)
 				{
