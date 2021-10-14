@@ -24,7 +24,7 @@ namespace BehaviorDesigner.Runtime.Tasks.Unity.UnityCharacterController
         {
             //spaceShip.DropMine();
 
-            needMine.Value = true;
+            needMine.Value = false;
 
             return base.OnUpdate();
         }
