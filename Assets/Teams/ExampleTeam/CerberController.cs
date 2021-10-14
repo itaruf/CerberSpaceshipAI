@@ -14,17 +14,21 @@ namespace TeamCerber
         private bool needShoot;
         private bool needMine;
         private bool needShockwave;
-        private bool needAvoid;
         private bool followPlayer;
         private bool moveToWp;
 
         private Vector2 closestWpPosition;
+
         private float mineSecurityDistance = .5f;
         private float asteroidSecurityDistance = 1.5f;
+        private float shockwaveDistance = 1.5f;
+
+        private bool needAvoid;
         private bool isAvoiding = false;
         private Vector2 avoidedAstPos;
 
         float targetOrient;
+
         public override void Initialize(SpaceShipView spaceship, GameData data)
         {
             behaviorTree = GetComponent<BehaviorTree>();
@@ -34,40 +38,38 @@ namespace TeamCerber
 
         public override InputData UpdateInput(SpaceShipView spaceship, GameData data)
         {
+            float thrust = 1.0f;
+
+            //booléens
             needShoot = (bool)behaviorTree.GetVariable("Need Shoot").GetValue();
             needMine = (bool)behaviorTree.GetVariable("Need Mine").GetValue();
             needShockwave = (bool)behaviorTree.GetVariable("Need Shockwave").GetValue();
-            needAvoid = (bool)behaviorTree.GetVariable("Need Avoid").GetValue();
             followPlayer = (bool)behaviorTree.GetVariable("Follow Player").GetValue();
             moveToWp = (bool)behaviorTree.GetVariable("Move to Wp").GetValue();
 
             SpaceShipView otherSpaceship = data.GetSpaceShipForOwner(1 - spaceship.Owner);
 
-            float thrust = 1.0f;
-
-            //float targetOrient = spaceship.Orientation + 90.0f;
-
-            if (followPlayer)
-            {
-                targetOrient = -Mathf.Atan2(otherSpaceship.Position.x - spaceship.Position.x, otherSpaceship.Position.y - spaceship.Position.y) * Mathf.Rad2Deg + 90;
-            }
-            else if (moveToWp)
-            {
-                MoveToWp(spaceship, data);
-            }
-            else if (!followPlayer && !moveToWp)
-            {
-                //targetOrient = spaceship.Orientation;
-            }
+            CheckShockwaveDistance(spaceship, otherSpaceship);
 
             bool canHitEnemy = AimingHelpers.CanHit(spaceship, otherSpaceship.Position, otherSpaceship.Velocity, 0.15f);
+            LayerMask mask = LayerMask.GetMask("Asteroid");
+            RaycastHit2D hit2 = Physics2D.Raycast(spaceship.Position, spaceship.Velocity, 20.0f, mask);
+            RaycastHit2D hit = Physics2D.Linecast(spaceship.Position, otherSpaceship.Position, mask);
+            CheckHitEnemy(spaceship, otherSpaceship, canHitEnemy, hit, hit2);
 
-            if (needShoot && canHitEnemy)
-            {
-                behaviorTree.SetVariableValue("Need Shoot", false);
-            }
+            CheckHitMine(spaceship, data, out var canHitMine);
 
-            bool canHitMine = false;
+            MoveToWp(spaceship, data, hit2);
+
+            behaviorTree.SetVariableValue("Need Mine", false);
+            behaviorTree.SetVariableValue("Need Shockwave", false);
+
+            return new InputData(thrust, targetOrient, (needShoot && canHitEnemy) || canHitMine, needMine, needShockwave);
+        }
+
+        private void CheckHitMine(SpaceShipView spaceship, GameData data, out bool canHitMine)
+        {
+            canHitMine = false;
             foreach (MineView mine in data.Mines)
             {
                 bool isHittable = AimingHelpers.CanHit(spaceship, mine.Position, 1f);
@@ -78,14 +80,40 @@ namespace TeamCerber
                     break;
                 }
             }
-
-            behaviorTree.SetVariableValue("Need Mine", false);
-            behaviorTree.SetVariableValue("Need Shockwave", false);
-
-            return new InputData(thrust, targetOrient, (needShoot && canHitEnemy) || canHitMine, needMine, needShockwave);
         }
 
-        void MoveToWp(SpaceShipView spaceship, GameData data)
+        private void CheckHitEnemy(SpaceShipView spaceship, SpaceShipView otherSpaceship, bool canHitEnemy, RaycastHit2D hit, RaycastHit2D hit2)
+        {
+
+            //if (hit2.collider != null)
+            //{
+            //    if (hit2.collider.CompareTag("Asteroid"))
+            //    {
+            //        canHitEnemy = false;
+            //    }
+            //}
+            if (hit.collider != null)
+            {
+                if (hit.collider.CompareTag("Asteroid"))
+                {
+                    canHitEnemy = false;
+                }
+            }
+            if (needShoot && canHitEnemy)
+            {
+                behaviorTree.SetVariableValue("Need Shoot", false);
+            }
+        }
+
+        private void CheckShockwaveDistance(SpaceShipView spaceship, SpaceShipView otherSpaceship)
+        {
+            if (Vector2.Distance(spaceship.Position, otherSpaceship.Position) < shockwaveDistance)
+            {
+                needShockwave = true;
+            }
+        }
+
+        void MoveToWp(SpaceShipView spaceship, GameData data, RaycastHit2D hitVelocity)
         {
             Debug.DrawRay(spaceship.Position, (Quaternion.Euler(0, 0, targetOrient) * Vector3.right).normalized * asteroidSecurityDistance, Color.red);
             Debug.Log(targetOrient);
